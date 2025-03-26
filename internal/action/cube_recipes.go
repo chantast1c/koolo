@@ -533,21 +533,26 @@ func hasItemsForRecipe(ctx *context.Status, recipe CubeRecipe) ([]data.Item, boo
 		return hasItemsForGrandCharmReroll(ctx, items)
 	}
 	//TODO: include slice of all upgrade recipes and pass Item.identifiedName to function
-	if recipe.Name == "Upgraded Magefist" || recipe.Name == "Double Upgraded Magefist" {
-		return upgradeArmor(ctx, recipe, "Magefist")
+	if recipe.Name == "Upgraded Magefist" {
+		return upgradeArmor(ctx, recipe, "LightGauntlets")
+	}
+	if recipe.Name == "Double Upgraded Magefist" {
+		return upgradeArmor(ctx, recipe, "BattleGauntlets")
 	}
 	if recipe.Name == "Upgraded Trang-ouls" {
-		return upgradeArmor(ctx, recipe, "Trang-Oul's Claws")
+		return upgradeArmor(ctx, recipe, "HeavyBracers")
 	}
 
 	if recipe.Name == "Upgraded Gorerider" {
-		return upgradeArmor(ctx, recipe, "Gorerider")
+		return upgradeArmor(ctx, recipe, "WarBoots")
 	}
 
-	if recipe.Name == "Upgraded Swordback x1" || recipe.Name == "Upgraded Swordback x2" {
-		return upgradeArmor(ctx, recipe, "Swordback Hold")
+	if recipe.Name == "Upgraded Swordback x1" {
+		return upgradeArmor(ctx, recipe, "SpikedShield")
 	}
-
+	if recipe.Name == "Upgraded Swordback x2" {
+		return upgradeArmor(ctx, recipe, "BarbedShield")
+	}
 	recipeItems := make(map[string]int)
 	for _, item := range recipe.Items {
 		recipeItems[item]++
@@ -583,7 +588,7 @@ func hasItemsForRecipe(ctx *context.Status, recipe CubeRecipe) ([]data.Item, boo
 	return nil, false
 }
 
-func upgradeArmor(ctx *context.Status, recipe CubeRecipe, name string) ([]data.Item, bool) {
+func upgradeArmor(ctx *context.Status, recipe CubeRecipe, base string) ([]data.Item, bool) {
 
 	ctx.RefreshGameData()
 	items := ctx.Data.Inventory.ByLocation(item.LocationStash, item.LocationSharedStash)
@@ -597,21 +602,22 @@ func upgradeArmor(ctx *context.Status, recipe CubeRecipe, name string) ([]data.I
 	// Iterate over the items in our stash to see if we have the items for the recipie.
 	for _, item := range items {
 		if count, ok := recipeItems[string(item.Name)]; ok {
-			//skip item if it is set+ but does not match identified name
+			//Skip item if same base found but not a unique or set item
 			//TODO: check for white bases - should not pass if white base
-			if (item.Quality.ToString() == "Set" || item.Quality.ToString() == "Unique") && item.IdentifiedName != name {
+			if string(item.Name) == base && !(item.Quality.ToString() == "Unique" || item.Quality.ToString() == "Set") {
 				continue
-			}
-			itemsForRecipe = append(itemsForRecipe, item)
-			// Check if we now have exactly the needed count before decrementing
-			count -= 1
-			if count == 0 {
-				delete(recipeItems, string(item.Name))
-				if len(recipeItems) == 0 {
-					return itemsForRecipe, true
-				}
 			} else {
-				recipeItems[string(item.Name)] = count
+				itemsForRecipe = append(itemsForRecipe, item)
+				// Check if we now have exactly the needed count before decrementing
+				count -= 1
+				if count == 0 {
+					delete(recipeItems, string(item.Name))
+					if len(recipeItems) == 0 {
+						return itemsForRecipe, true
+					}
+				} else {
+					recipeItems[string(item.Name)] = count
+				}
 			}
 		}
 	}
