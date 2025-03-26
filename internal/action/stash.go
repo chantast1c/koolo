@@ -239,10 +239,16 @@ func shouldKeepRecipeItem(i data.Item) bool {
 	ctx.SetLastStep("shouldKeepRecipeItem")
 
 	// No items with quality higher than magic can be part of a recipe
-	if i.Quality > item.QualityMagic {
+	//TODO: Check Item attributes to check for Item.shield or Item.body and return false
+	if i.Quality > item.QualityMagic  {
 		return false
 	}
 
+	//Auto-keep all jewels
+	if i.Name == "Jewel" {
+		return true
+	}
+	
 	itemInStashNotMatchingRule := false
 
 	// Check if we already have the item in our stash and if it doesn't match any of our pickit rules
